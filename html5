@@ -1,0 +1,1199 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dominó PRO — Tabuleiro Curvo</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+:root{
+  --bg:#06101c;
+  --panel:#0c1b2d;
+  --panel2:#132941;
+  --accent:#00e5ff;
+  --purple:#7c4dff;
+  --text:#f4f7fb;
+  --muted:#91a6bf;
+  --green:#00e676;
+  --gold:#ffd740;
+}
+
+body{
+  min-height:100vh;
+  font-family:Arial,Helvetica,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top,#173c65 0,#07111e 45%,#02070d 100%);
+}
+
+.app{
+  width:min(1200px,96%);
+  margin:auto;
+  padding:20px 0 40px;
+}
+
+header{
+  text-align:center;
+  margin-bottom:18px;
+}
+
+header h1{
+  font-size:clamp(2rem,5vw,3.5rem);
+  font-weight:900;
+  background:linear-gradient(90deg,#00e5ff,#fff,#8d65ff);
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+header p{
+  color:var(--muted);
+  margin-top:5px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.btn{
+  border:1px solid #294765;
+  background:var(--panel2);
+  color:white;
+  padding:11px 18px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:.2s;
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+  border-color:var(--accent);
+}
+
+.btn.primary{
+  background:linear-gradient(135deg,#008da8,#6840d9);
+  border:0;
+}
+
+.btn.green{
+  background:#087c49;
+}
+
+.game{
+  background:rgba(12,27,45,.96);
+  border:1px solid #203d5c;
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+
+.info{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.stat{
+  text-align:center;
+  background:#081625;
+  border:1px solid #1c3550;
+  border-radius:14px;
+  padding:11px;
+}
+
+.stat span{
+  display:block;
+  color:var(--muted);
+  font-size:.8rem;
+}
+
+.stat strong{
+  display:block;
+  margin-top:4px;
+}
+
+.status{
+  text-align:center;
+  background:#081625;
+  border:1px solid #1d3a57;
+  border-radius:14px;
+  padding:13px;
+  margin-bottom:15px;
+}
+
+/* =========================
+   ÁREA DO TABULEIRO
+========================= */
+
+.board{
+  position:relative;
+  height:430px;
+  overflow:hidden;
+  border-radius:22px;
+  padding:25px;
+  background:
+    radial-gradient(circle at center,#126149,#083c30 55%,#05251f);
+  border:5px solid #70431e;
+  box-shadow:
+    inset 0 0 35px rgba(0,0,0,.55),
+    0 10px 30px rgba(0,0,0,.25);
+}
+
+/* Linha visual da mesa */
+.board::before{
+  content:"";
+  position:absolute;
+  inset:20px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:18px;
+  pointer-events:none;
+}
+
+.chain{
+  width:100%;
+  height:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  align-content:center;
+  gap:7px;
+  position:relative;
+}
+
+/* =========================
+   PEÇA
+========================= */
+
+.domino{
+  width:54px;
+  height:92px;
+  border-radius:9px;
+  background:linear-gradient(145deg,#ffffff,#d8e0e8);
+  border:2px solid #aeb8c3;
+  box-shadow:0 5px 12px rgba(0,0,0,.4);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  flex-shrink:0;
+  color:#111;
+}
+
+/* Peças no tabuleiro */
+.chain .domino{
+  width:92px;
+  height:54px;
+  flex-direction:row;
+  transition:.25s;
+}
+
+/* Peça vertical dentro da corrente */
+.chain .domino.vertical{
+  width:54px;
+  height:92px;
+  flex-direction:column;
+}
+
+/* Divisões horizontais */
+.chain .domino:not(.vertical) .half{
+  width:50%;
+  height:100%;
+}
+
+.chain .domino:not(.vertical) .half:first-child{
+  border-right:2px solid #777;
+  border-bottom:0;
+}
+
+/* Divisões verticais */
+.chain .domino.vertical .half{
+  width:100%;
+  height:50%;
+}
+
+.chain .domino.vertical .half:first-child{
+  border-right:0;
+  border-bottom:2px solid #777;
+}
+
+.half{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.dots{
+  width:34px;
+  height:34px;
+  position:relative;
+}
+
+.dot{
+  position:absolute;
+  width:7px;
+  height:7px;
+  background:#111;
+  border-radius:50%;
+}
+
+.tl{left:2px;top:2px}
+.tc{left:13px;top:2px}
+.tr{right:2px;top:2px}
+.ml{left:2px;top:13px}
+.mc{left:13px;top:13px}
+.mr{right:2px;top:13px}
+.bl{left:2px;bottom:2px}
+.bc{left:13px;bottom:2px}
+.br{right:2px;bottom:2px}
+
+/* =========================
+   COMPUTADOR
+========================= */
+
+.area-title{
+  color:var(--muted);
+  font-size:.9rem;
+  margin-bottom:8px;
+}
+
+.hidden-hand{
+  min-height:58px;
+  display:flex;
+  justify-content:center;
+  gap:7px;
+}
+
+.back{
+  width:36px;
+  height:58px;
+  border-radius:7px;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      #132d4b,
+      #132d4b 5px,
+      #1d4b77 5px,
+      #1d4b77 10px
+    );
+  border:2px solid #4e7da7;
+}
+
+/* =========================
+   JOGADOR
+========================= */
+
+.player-area{
+  margin-top:15px;
+}
+
+.hand{
+  min-height:100px;
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.player-piece{
+  cursor:pointer;
+  transition:.2s;
+}
+
+.player-piece:hover{
+  transform:translateY(-10px);
+  border-color:var(--accent);
+  box-shadow:0 0 20px rgba(0,229,255,.5);
+}
+
+.player-piece.disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.controls{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.rules{
+  margin-top:15px;
+  padding:16px;
+  background:#081625;
+  border:1px solid #1d3854;
+  border-radius:16px;
+}
+
+.rules h2{
+  margin-bottom:8px;
+}
+
+.rules ul{
+  padding-left:20px;
+  line-height:1.7;
+  color:#cbd8e8;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.78);
+  z-index:100;
+  padding:20px;
+}
+
+.modal.show{
+  display:flex;
+}
+
+.modal-box{
+  width:min(450px,100%);
+  background:#0c1b2d;
+  border:1px solid #31516f;
+  border-radius:20px;
+  padding:25px;
+  text-align:center;
+}
+
+.modal-box h2{
+  color:var(--gold);
+  margin-bottom:10px;
+}
+
+.modal-box p{
+  color:#cbd8e8;
+  line-height:1.6;
+  margin-bottom:18px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media(max-width:700px){
+
+  .info{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .board{
+    height:390px;
+    padding:12px;
+  }
+
+  .chain .domino{
+    width:76px;
+    height:45px;
+  }
+
+  .chain .domino.vertical{
+    width:45px;
+    height:76px;
+  }
+
+  .dots{
+    transform:scale(.75);
+  }
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+  <h1>🁣 DOMINÓ PRO</h1>
+  <p>Tabuleiro com corrente visual de peças</p>
+</header>
+
+<div class="topbar">
+  <button class="btn primary" onclick="startGame()">
+    ▶ Iniciar Jogo
+  </button>
+
+  <button class="btn" onclick="newGame()">
+    🔄 Novo Jogo
+  </button>
+
+  <button class="btn" onclick="showRules()">
+    📖 Regras
+  </button>
+</div>
+
+<div class="game">
+
+<div class="info">
+
+  <div class="stat">
+    <span>Jogador</span>
+    <strong id="playerCount">0 peças</strong>
+  </div>
+
+  <div class="stat">
+    <span>Computador</span>
+    <strong id="cpuCount">0 peças</strong>
+  </div>
+
+  <div class="stat">
+    <span>Monte</span>
+    <strong id="deckCount">0 peças</strong>
+  </div>
+
+  <div class="stat">
+    <span>Placar</span>
+    <strong id="score">0 × 0</strong>
+  </div>
+
+</div>
+
+<div class="status" id="status">
+  Clique em "Iniciar Jogo".
+</div>
+
+<div>
+  <div class="area-title">
+    🤖 Mão do Computador
+  </div>
+
+  <div class="hidden-hand" id="cpuHand"></div>
+</div>
+
+<!-- TABULEIRO -->
+<div class="board">
+
+  <div class="chain" id="board">
+    <span style="color:#b9d4cb">
+      A corrente de dominó aparecerá aqui
+    </span>
+  </div>
+
+</div>
+
+<div class="player-area">
+
+  <div class="area-title">
+    👤 Sua Mão — clique para jogar
+  </div>
+
+  <div class="hand" id="playerHand"></div>
+
+</div>
+
+<div class="controls">
+
+  <button class="btn green" onclick="drawPiece()">
+    ➕ Comprar Peça
+  </button>
+
+  <button class="btn" onclick="passTurn()">
+    ⏭ Passar
+  </button>
+
+</div>
+
+<div class="rules">
+
+<h2>📜 Regras</h2>
+
+<ul>
+<li>28 peças no dominó tradicional.</li>
+<li>Cada jogador começa com 7 peças.</li>
+<li>Combine uma peça com uma das pontas.</li>
+<li>Sem jogada, compre uma peça.</li>
+<li>Se o monte acabar, passe.</li>
+<li>Quem ficar sem peças vence.</li>
+<li>O placar registra as rodadas.</li>
+</ul>
+
+</div>
+
+</div>
+</div>
+
+<div class="modal" id="modal">
+
+<div class="modal-box">
+
+<h2>🏆 Fim da Rodada</h2>
+
+<p id="resultText"></p>
+
+<button class="btn primary" onclick="closeModal();newGame()">
+🔄 Jogar Novamente
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+let deck=[];
+let player=[];
+let cpu=[];
+let board=[];
+let turn="player";
+let playerScore=0;
+let cpuScore=0;
+let gameOver=false;
+
+const $=id=>document.getElementById(id);
+
+/* =========================
+   BARALHO
+========================= */
+
+function createDeck(){
+
+  const d=[];
+
+  for(let a=0;a<=6;a++){
+
+    for(let b=a;b<=6;b++){
+
+      d.push([a,b]);
+
+    }
+
+  }
+
+  return d;
+}
+
+function shuffle(array){
+
+  for(let i=array.length-1;i>0;i--){
+
+    const j=Math.floor(Math.random()*(i+1));
+
+    [array[i],array[j]]=
+    [array[j],array[i]];
+
+  }
+
+}
+
+/* =========================
+   JOGO
+========================= */
+
+function startGame(){
+
+  playerScore=0;
+  cpuScore=0;
+
+  newRound();
+
+}
+
+function newGame(){
+
+  newRound();
+
+}
+
+function newRound(){
+
+  deck=createDeck();
+
+  shuffle(deck);
+
+  player=deck.splice(0,7);
+
+  cpu=deck.splice(0,7);
+
+  board=[];
+
+  turn="player";
+
+  gameOver=false;
+
+  render();
+
+  setStatus(
+    "👤 Sua vez! Escolha uma peça."
+  );
+
+}
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+  renderPlayer();
+
+  renderCPU();
+
+  renderBoard();
+
+  $("playerCount").textContent=
+    player.length+" peças";
+
+  $("cpuCount").textContent=
+    cpu.length+" peças";
+
+  $("deckCount").textContent=
+    deck.length+" peças";
+
+  $("score").textContent=
+    playerScore+" × "+cpuScore;
+
+}
+
+/* =========================
+   MÃO DO JOGADOR
+========================= */
+
+function renderPlayer(){
+
+  const hand=$("playerHand");
+
+  hand.innerHTML="";
+
+  player.forEach((piece,index)=>{
+
+    const el=
+      createDomino(
+        piece[0],
+        piece[1]
+      );
+
+    el.classList.add("player-piece");
+
+    if(
+      turn!=="player" ||
+      !canPlay(piece)
+    ){
+
+      el.classList.add("disabled");
+
+    }else{
+
+      el.onclick=
+        ()=>playPlayer(index);
+
+    }
+
+    hand.appendChild(el);
+
+  });
+
+}
+
+/* =========================
+   MÃO CPU
+========================= */
+
+function renderCPU(){
+
+  const hand=$("cpuHand");
+
+  hand.innerHTML="";
+
+  cpu.forEach(()=>{
+
+    const back=
+      document.createElement("div");
+
+    back.className="back";
+
+    hand.appendChild(back);
+
+  });
+
+}
+
+/* =========================
+   TABULEIRO
+========================= */
+
+function renderBoard(){
+
+  const area=$("board");
+
+  area.innerHTML="";
+
+  if(board.length===0){
+
+    area.innerHTML=
+      '<span style="color:#b9d4cb">'+
+      'A corrente de dominó aparecerá aqui'+
+      '</span>';
+
+    return;
+
+  }
+
+  board.forEach((piece,index)=>{
+
+    const el=
+      createDomino(
+        piece[0],
+        piece[1]
+      );
+
+    /*
+      Alterna vertical/horizontal
+      para criar uma corrente visual.
+    */
+
+    if(index%5===4){
+
+      el.classList.add("vertical");
+
+    }
+
+    area.appendChild(el);
+
+  });
+
+}
+
+/* =========================
+   PEÇA
+========================= */
+
+function createDomino(a,b){
+
+  const el=
+    document.createElement("div");
+
+  el.className="domino";
+
+  el.appendChild(
+    createHalf(a)
+  );
+
+  el.appendChild(
+    createHalf(b)
+  );
+
+  return el;
+
+}
+
+function createHalf(value){
+
+  const half=
+    document.createElement("div");
+
+  half.className="half";
+
+  const dots=
+    document.createElement("div");
+
+  dots.className="dots";
+
+  const positions={
+
+    0:[],
+
+    1:["mc"],
+
+    2:["tl","br"],
+
+    3:["tl","mc","br"],
+
+    4:["tl","tr","bl","br"],
+
+    5:["tl","tr","mc","bl","br"],
+
+    6:[
+      "tl","ml","bl",
+      "tr","mr","br"
+    ]
+
+  };
+
+  positions[value].forEach(pos=>{
+
+    const dot=
+      document.createElement("span");
+
+    dot.className=
+      "dot "+pos;
+
+    dots.appendChild(dot);
+
+  });
+
+  half.appendChild(dots);
+
+  return half;
+
+}
+
+/* =========================
+   JOGADAS
+========================= */
+
+function canPlay(piece){
+
+  if(board.length===0)
+    return true;
+
+  const left=
+    board[0][0];
+
+  const right=
+    board[board.length-1][1];
+
+  return(
+    piece[0]===left ||
+    piece[1]===left ||
+    piece[0]===right ||
+    piece[1]===right
+  );
+
+}
+
+function placePiece(piece){
+
+  if(board.length===0){
+
+    board.push(piece);
+
+    return;
+
+  }
+
+  const left=
+    board[0][0];
+
+  const right=
+    board[board.length-1][1];
+
+  if(piece[1]===left){
+
+    board.unshift(piece);
+
+  }else if(piece[0]===left){
+
+    board.unshift(
+      [piece[1],piece[0]]
+    );
+
+  }else if(piece[0]===right){
+
+    board.push(piece);
+
+  }else if(piece[1]===right){
+
+    board.push(
+      [piece[1],piece[0]]
+    );
+
+  }
+
+}
+
+/* =========================
+   JOGADOR
+========================= */
+
+function playPlayer(index){
+
+  if(turn!=="player" || gameOver)
+    return;
+
+  const piece=player[index];
+
+  if(!canPlay(piece)){
+
+    setStatus(
+      "❌ Essa peça não combina com a mesa."
+    );
+
+    return;
+
+  }
+
+  player.splice(index,1);
+
+  placePiece(piece);
+
+  if(player.length===0){
+
+    finishRound("player");
+
+    return;
+
+  }
+
+  turn="cpu";
+
+  render();
+
+  setStatus(
+    "🤖 Computador pensando..."
+  );
+
+  setTimeout(cpuTurn,700);
+
+}
+
+/* =========================
+   CPU
+========================= */
+
+function cpuTurn(){
+
+  if(gameOver)
+    return;
+
+  let index=
+    cpu.findIndex(canPlay);
+
+  if(index===-1){
+
+    while(
+      deck.length>0 &&
+      index===-1
+    ){
+
+      cpu.push(deck.pop());
+
+      index=
+        cpu.length-1;
+
+      if(
+        canPlay(cpu[index])
+      ){
+
+        break;
+
+      }
+
+      index=-1;
+
+    }
+
+  }
+
+  if(index!==-1){
+
+    const piece=
+      cpu.splice(index,1)[0];
+
+    placePiece(piece);
+
+    if(cpu.length===0){
+
+      finishRound("cpu");
+
+      return;
+
+    }
+
+    turn="player";
+
+    render();
+
+    setStatus(
+      "👤 Sua vez!"
+    );
+
+  }else{
+
+    turn="player";
+
+    render();
+
+    setStatus(
+      "🤖 Computador passou. Sua vez!"
+    );
+
+  }
+
+}
+
+/* =========================
+   COMPRAR
+========================= */
+
+function drawPiece(){
+
+  if(turn!=="player" || gameOver)
+    return;
+
+  if(deck.length===0){
+
+    setStatus(
+      "📦 O monte está vazio."
+    );
+
+    return;
+
+  }
+
+  const piece=deck.pop();
+
+  player.push(piece);
+
+  render();
+
+  if(canPlay(piece)){
+
+    setStatus(
+      "🃏 Você comprou uma peça jogável!"
+    );
+
+  }else{
+
+    setStatus(
+      "🃏 Peça comprada."
+    );
+
+  }
+
+}
+
+/* =========================
+   PASSAR
+========================= */
+
+function passTurn(){
+
+  if(turn!=="player" || gameOver)
+    return;
+
+  if(player.some(canPlay)){
+
+    setStatus(
+      "⚠️ Você ainda pode jogar."
+    );
+
+    return;
+
+  }
+
+  if(deck.length>0){
+
+    setStatus(
+      "⚠️ Compre peças antes de passar."
+    );
+
+    return;
+
+  }
+
+  turn="cpu";
+
+  render();
+
+  setStatus(
+    "⏭ Você passou."
+  );
+
+  setTimeout(
+    cpuTurn,
+    700
+  );
+
+}
+
+/* =========================
+   FINAL
+========================= */
+
+function finishRound(winner){
+
+  gameOver=true;
+
+  if(winner==="player"){
+
+    playerScore++;
+
+    $("resultText").textContent=
+      "🎉 Você venceu a rodada!";
+
+  }else{
+
+    cpuScore++;
+
+    $("resultText").textContent=
+      "🤖 O computador venceu a rodada.";
+
+  }
+
+  render();
+
+  setTimeout(()=>{
+
+    $("modal")
+      .classList.add("show");
+
+  },300);
+
+}
+
+function setStatus(text){
+
+  $("status").textContent=text;
+
+}
+
+function closeModal(){
+
+  $("modal")
+    .classList.remove("show");
+
+}
+
+function showRules(){
+
+  alert(
+`🁣 REGRAS DO DOMINÓ
+
+28 peças tradicionais.
+
+Cada jogador recebe 7 peças.
+
+Combine os números das pontas.
+
+Se não puder jogar:
+1. Compre uma peça.
+2. Continue comprando enquanto necessário.
+3. Se o monte acabar, passe.
+
+Vence quem ficar sem peças.
+
+Boa partida!`
+  );
+
+}
+
+render();
+
+</script>
+
+</body>
+</html>
+```
