@@ -1,0 +1,17 @@
+O Dominó PRO é um jogo de dominó completo, moderno e responsivo, desenvolvido em um único ficheiro HTML (incluindo CSS e JavaScript). Ele combina uma interface visual elegante com efeitos de néon, layout fluido para o tabuleiro de peças e inteligência artificial ajustável.
+​✨ Principais Funcionalidades
+​Capa Inicial (Splash Screen) Luxuosa: Ecrã de introdução com logótipo em anéis giratórios, efeitos de brilho néon e botões interativos para iniciar o jogo, ver as regras ou abrir as configurações.
+​Inteligência Artificial (IA) com Níveis de Dificuldade: Pode escolher nas configurações o nível da IA:
+​Fácil (Iniciante): Joga peças válidas de forma aleatória.
+​Médio (Estratégico): Prioriza peças de maior valor numérico.  
+​Difícil (Mestre): Foco estratégico em duplos e bloqueio de pontas.
+​Sistema de Dicas (Hint): Um botão de ajuda exclusivo para iniciantes que destaca visualmente uma peça válida na sua mão quando tiver dúvidas de qual jogada fazer.
+​Tabuleiro Interativo e Dinâmico: As peças ajustam-se automaticamente em formato horizontal ou vertical (corrente visual), contando com barras de deslocamento (scroll) para acomodar partidas longas.
+​Placar e Rodadas Completas: Controlo automático de peças na mão, peças restantes no monte, contagem de vitórias e modal de fim de rodada.
+​🚀 Como Jogar
+​Abra o código HTML guardado num navegador web recente (Google Chrome, Edge, Safari, Firefox).
+​Na tela de capa, clique em INICIAR JOGO.
+​Na sua vez, clique numa das suas peças que corresponda ao número de pontos de uma das pontas abertas da mesa.
+​Caso não tenha uma peça compatível, utilize o botão ➕ Comprar Peça.
+​Se o monte de compras estiver vazio e não puder jogar, clique em ⏭ Passar.
+​O primeiro jogador a ficar sem peças na mão vence a rodada!
