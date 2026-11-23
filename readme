@@ -1,17 +1,49 @@
-O Dominó PRO é um jogo de dominó completo, moderno e responsivo, desenvolvido em um único ficheiro HTML (incluindo CSS e JavaScript). Ele combina uma interface visual elegante com efeitos de néon, layout fluido para o tabuleiro de peças e inteligência artificial ajustável.
-​✨ Principais Funcionalidades
-​Capa Inicial (Splash Screen) Luxuosa: Ecrã de introdução com logótipo em anéis giratórios, efeitos de brilho néon e botões interativos para iniciar o jogo, ver as regras ou abrir as configurações.
-​Inteligência Artificial (IA) com Níveis de Dificuldade: Pode escolher nas configurações o nível da IA:
-​Fácil (Iniciante): Joga peças válidas de forma aleatória.
-​Médio (Estratégico): Prioriza peças de maior valor numérico.  
-​Difícil (Mestre): Foco estratégico em duplos e bloqueio de pontas.
-​Sistema de Dicas (Hint): Um botão de ajuda exclusivo para iniciantes que destaca visualmente uma peça válida na sua mão quando tiver dúvidas de qual jogada fazer.
-​Tabuleiro Interativo e Dinâmico: As peças ajustam-se automaticamente em formato horizontal ou vertical (corrente visual), contando com barras de deslocamento (scroll) para acomodar partidas longas.
-​Placar e Rodadas Completas: Controlo automático de peças na mão, peças restantes no monte, contagem de vitórias e modal de fim de rodada.
-​🚀 Como Jogar
-​Abra o código HTML guardado num navegador web recente (Google Chrome, Edge, Safari, Firefox).
-​Na tela de capa, clique em INICIAR JOGO.
-​Na sua vez, clique numa das suas peças que corresponda ao número de pontos de uma das pontas abertas da mesa.
-​Caso não tenha uma peça compatível, utilize o botão ➕ Comprar Peça.
-​Se o monte de compras estiver vazio e não puder jogar, clique em ⏭ Passar.
-​O primeiro jogador a ficar sem peças na mão vence a rodada!
+# 🁣 Dominó PRO
+
+Jogo de dominó tradicional (28 peças) desenvolvido em HTML, CSS e JavaScript puro em um único arquivo, com tabuleiro em zigue-zague (serpentina), três níveis de Inteligência Artificial e modos de disputa em série com troféu de campeão.
+
+---
+
+## ✨ Funcionalidades
+
+- **Tabuleiro em Zigue-Zague (Serpentina):** As peças se organizam em fileiras alternadas (esquerda para direita e direita para esquerda) com peças de curva na vertical e destaque luminoso nas duas pontas abertas.
+- **Buchas na Vertical:** Peças duplas (`[0|0]` a `[6|6]`) são posicionadas na vertical automaticamente para facilitar a leitura da mesa.
+- **Escolha de Ponta:** Quando uma peça encaixa nas duas extremidades abertas da corrente, o jogador pode escolher em qual ponta deseja jogar.
+- **Três Níveis de Inteligência Artificial:**
+  - **Fácil:** Escolhe aleatoriamente entre as jogadas válidas.
+  - **Médio:** Prioriza descartar peças com maior soma de pontos.
+  - **Difícil:** Avalia a frequência de cada número na própria mão, controla as pontas abertas e calcula o risco de trancar o jogo quando está em vantagem de pontos.
+- **Detecção de Jogo Trancado:** Quando o monte acaba e nenhum jogador possui jogadas válidas, o jogo encerra a rodada automaticamente, soma os pontos restantes nas mãos e declara vencedor quem tiver **menos pontos**.
+- **Formatos de Partida e Troféu:**
+  - **Modo Livre:** Rodadas contínuas sem limite.
+  - **Melhor de 3:** Primeiro a atingir **2 vitórias** conquista o troféu.
+  - **Melhor de 5:** Primeiro a atingir **3 vitórias** conquista o troféu.
+- **Sistema de Dica:** Destaca visualmente na mão do jogador uma peça válida para a rodada atual.
+- **Design Responsivo:** Adapta o número de peças por fileira no tabuleiro e o tamanho das pedras para desktop e dispositivos móveis.
+
+---
+
+## 🚀 Como Executar
+
+Por ser um projeto *zero-dependency* em arquivo único (`index.html`), não é necessário instalar pacotes ou configurar servidores:
+
+1. Salve o código como `index.html`.
+2. Dê um duplo clique no arquivo para abri-lo em qualquer navegador moderno (Chrome, Edge, Firefox, Safari) ou sirva com qualquer servidor estático (como Live Server no VS Code).
+
+---
+
+## 📜 Regras do Jogo
+
+1. Cada partida utiliza as **28 peças** tradicionais (`0|0` até `6|6`), distribuindo **7 peças** para o jogador e **7 peças** para o computador, deixando **14 peças** no monte.
+2. Na sua vez, clique em uma peça da sua mão que combine com uma das duas pontas destacadas em azul na mesa.
+3. Caso não possua peças compatíveis, clique em **Comprar Peça** até obter uma peça jogável ou esvaziar o monte.
+4. Se o monte estiver vazio e você não tiver jogadas válidas, clique em **Passar**.
+5. Vence a rodada quem esvaziar a mão primeiro (**bater**) ou quem tiver **menos pontos** caso o jogo fique **trancado**.
+
+---
+
+## 🛠️ Estrutura do Código
+
+- **CSS (`<style>`):** Variáveis de tema escuro (`:root`), tela inicial animada (*splash screen*), layout em serpentina (`.snake-board`, `.snake-row.rtl`, `.snake-turn`) e modais responsivos.
+- **Estado do Jogo (`<script>`):** Gerenciamento de baralho (`deck`), mãos (`player`, `cpu`), corrente da mesa (`board`), controle de turnos (`turn`, `roundId`), placar da série e modais de fim de rodada.
+- **Motor de IA (`scoreHardMove`):** Simula o tabuleiro resultante (`simulateBoardPlacement`) antes de decidir a melhor jogada no modo Difícil.
