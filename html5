@@ -891,9 +891,11 @@ let cpuScore = 0;
 let gameOver = false;
 let seriesOver = false;
 let aiDifficulty = "medium";
-let matchMode = "free"; // "free" | "bo3" | "bo5"
+let matchMode = "free";
 let consecutivePasses = 0;
 let pendingPieceIndex = null;
+let roundId = 0;
+let cpuTimer = null;
 
 const $ = id => document.getElementById(id);
 
@@ -907,6 +909,18 @@ function getMatchModeLabel(){
   if(matchMode === "bo3") return "Melhor de 3 (Meta: 2)";
   if(matchMode === "bo5") return "Melhor de 5 (Meta: 3)";
   return "Modo Livre";
+}
+
+function scheduleCpuTurn(expectedRoundId){
+  if(cpuTimer){
+    clearTimeout(cpuTimer);
+    cpuTimer = null;
+  }
+  cpuTimer = setTimeout(() => {
+    cpuTimer = null;
+    if(expectedRoundId !== roundId || gameOver || turn !== "cpu") return;
+    cpuTurn(expectedRoundId);
+  }, 650);
 }
 
 function closeSplash(){
@@ -961,6 +975,11 @@ function startNewSeries(){
 }
 
 function newRound(){
+  roundId++;
+  if(cpuTimer){
+    clearTimeout(cpuTimer);
+    cpuTimer = null;
+  }
   deck = createDeck();
   shuffle(deck);
   player = deck.splice(0, 7);
@@ -993,12 +1012,13 @@ function renderPlayer(){
   const hand = $("playerHand");
   hand.innerHTML = "";
   player.forEach((piece, index) => {
+    if(!Array.isArray(piece) || piece.length < 2) return;
     const el = createDomino(piece[0], piece[1]);
     el.classList.add("player-piece");
     if(pendingPieceIndex === index){
       el.classList.add("selected");
     }
-    if(turn !== "player" || !canPlay(piece)){
+    if(turn !== "player" || gameOver || !canPlay(piece)){
       el.classList.add("disabled");
     } else {
       el.onclick = () => handlePlayerClick(index);
@@ -1031,7 +1051,7 @@ function renderBoard(){
   const area = $("board");
   area.innerHTML = "";
 
-  if(board.length === 0){
+  if(!Array.isArray(board) || board.length === 0){
     area.innerHTML = '<span style="color:#b9d4cb">A corrente de dominó aparecerá aqui</span>';
     return;
   }
@@ -1049,6 +1069,8 @@ function renderBoard(){
 
     for(let i = cursor; i < rowEnd; i++){
       const piece = board[i];
+      if(!Array.isArray(piece) || piece.length < 2) continue;
+
       const displayA = isRTL ? piece[1] : piece[0];
       const displayB = isRTL ? piece[0] : piece[1];
 
@@ -1068,7 +1090,7 @@ function renderBoard(){
     area.appendChild(rowEl);
     cursor = rowEnd;
 
-    if(cursor < board.length){
+    if(cursor < board.length && Array.isArray(board[cursor]) && board[cursor].length >= 2){
       const turnPiece = board[cursor];
       const turnWrapper = document.createElement("div");
       turnWrapper.className = "snake-turn " + (!isRTL ? "turn-right" : "turn-left");
@@ -1082,6 +1104,8 @@ function renderBoard(){
 
       turnWrapper.appendChild(turnEl);
       area.appendChild(turnWrapper);
+      cursor++;
+    } else if(cursor < board.length){
       cursor++;
     }
 
@@ -1117,7 +1141,8 @@ function createHalf(value){
     6: ["tl", "ml", "bl", "tr", "mr", "br"]
   };
 
-  positions[value].forEach(pos => {
+  const list = positions[value] || [];
+  list.forEach(pos => {
     const dot = document.createElement("span");
     dot.className = "dot " + pos;
     dots.appendChild(dot);
@@ -1131,9 +1156,15 @@ function createHalf(value){
    LÓGICA DE JOGADAS E PONTAS
 ========================= */
 function getValidSides(piece, currentBoard = board){
-  if(currentBoard.length === 0) return ["right"];
-  const left = currentBoard[0][0];
-  const right = currentBoard[currentBoard.length - 1][1];
+  if(!Array.isArray(piece) || piece.length < 2) return [];
+  if(!Array.isArray(currentBoard) || currentBoard.length === 0) return ["right"];
+
+  const first = currentBoard[0];
+  const last = currentBoard[currentBoard.length - 1];
+  if(!Array.isArray(first) || !Array.isArray(last)) return ["right"];
+
+  const left = first[0];
+  const right = last[1];
   const canLeft = (piece[0] === left || piece[1] === left);
   const canRight = (piece[0] === right || piece[1] === right);
 
@@ -1152,23 +1183,31 @@ function canPlay(piece, currentBoard = board){
 }
 
 function simulateBoardPlacement(piece, side, currentBoard = board){
-  const nextBoard = currentBoard.map(p => [...p]);
+  if(!Array.isArray(piece) || piece.length < 2){
+    return Array.isArray(currentBoard) ? currentBoard.map(p => [...p]) : [];
+  }
+
+  const nextBoard = Array.isArray(currentBoard)
+    ? currentBoard.filter(p => Array.isArray(p) && p.length >= 2).map(p => [p[0], p[1]])
+    : [];
+
   if(nextBoard.length === 0){
-    nextBoard.push([...piece]);
+    nextBoard.push([piece[0], piece[1]]);
     return nextBoard;
   }
+
   const left = nextBoard[0][0];
   const right = nextBoard[nextBoard.length - 1][1];
 
   if(side === "left"){
     if(piece[1] === left){
-      nextBoard.unshift([...piece]);
+      nextBoard.unshift([piece[0], piece[1]]);
     } else {
       nextBoard.unshift([piece[1], piece[0]]);
     }
   } else {
     if(piece[0] === right){
-      nextBoard.push([...piece]);
+      nextBoard.push([piece[0], piece[1]]);
     } else {
       nextBoard.push([piece[1], piece[0]]);
     }
@@ -1229,7 +1268,7 @@ function executePlayerMove(index, side){
   turn = "cpu";
   render();
   setStatus("🤖 Computador pensando...");
-  setTimeout(cpuTurn, 800);
+  scheduleCpuTurn(roundId);
 }
 
 /* =========================
@@ -1262,7 +1301,7 @@ function showHint(){
 function getRemainingFrequency(hand, excludeIndex){
   const freq = Array(7).fill(0);
   hand.forEach((p, idx) => {
-    if(idx === excludeIndex) return;
+    if(idx === excludeIndex || !Array.isArray(p) || p.length < 2) return;
     freq[p[0]]++;
     if(p[1] !== p[0]) freq[p[1]]++;
     else freq[p[0]]++;
@@ -1272,7 +1311,11 @@ function getRemainingFrequency(hand, excludeIndex){
 
 function scoreHardMove(move, cpuHand, currentBoard, remainingDeckCount, playerHandCount){
   const { index, piece, side } = move;
+  if(!Array.isArray(piece) || piece.length < 2) return -Infinity;
+
   const nextBoard = simulateBoardPlacement(piece, side, currentBoard);
+  if(!Array.isArray(nextBoard) || nextBoard.length === 0) return -Infinity;
+
   const remainingHand = cpuHand.filter((_, idx) => idx !== index);
   const freq = getRemainingFrequency(cpuHand, index);
 
@@ -1282,14 +1325,18 @@ function scoreHardMove(move, cpuHand, currentBoard, remainingDeckCount, playerHa
     return 10000;
   }
 
-  const newLeft = nextBoard[0][0];
-  const newRight = nextBoard[nextBoard.length - 1][1];
+  const firstPiece = nextBoard[0];
+  const lastPiece = nextBoard[nextBoard.length - 1];
+  if(!Array.isArray(firstPiece) || !Array.isArray(lastPiece)) return -Infinity;
 
-  score += freq[newLeft] * 14;
-  score += freq[newRight] * 14;
+  const newLeft = firstPiece[0];
+  const newRight = lastPiece[1];
 
-  const cpuStillHasNewLeft = remainingHand.some(p => p[0] === newLeft || p[1] === newLeft);
-  const cpuStillHasNewRight = remainingHand.some(p => p[0] === newRight || p[1] === newRight);
+  score += (freq[newLeft] || 0) * 14;
+  score += (freq[newRight] || 0) * 14;
+
+  const cpuStillHasNewLeft = remainingHand.some(p => Array.isArray(p) && (p[0] === newLeft || p[1] === newLeft));
+  const cpuStillHasNewRight = remainingHand.some(p => Array.isArray(p) && (p[0] === newRight || p[1] === newRight));
   if(!cpuStillHasNewLeft) score -= 12;
   if(!cpuStillHasNewRight) score -= 12;
 
@@ -1338,57 +1385,71 @@ function chooseHardMove(validMoves){
   return bestMove;
 }
 
-function cpuTurn(){
-  if(gameOver) return;
+function cpuTurn(activeRoundId){
+  if(activeRoundId !== roundId || gameOver || turn !== "cpu") return;
 
-  while(!cpu.some(canPlay) && deck.length > 0){
-    cpu.push(deck.pop());
-  }
+  try {
+    let boughtCount = 0;
+    while(!cpu.some(canPlay) && deck.length > 0){
+      const drawn = deck.pop();
+      if(Array.isArray(drawn) && drawn.length >= 2){
+        cpu.push(drawn);
+        boughtCount++;
+      }
+    }
 
-  const validMoves = [];
-  cpu.forEach((p, idx) => {
-    const sides = getValidSides(p);
-    sides.forEach(side => {
-      validMoves.push({ index: idx, piece: p, side });
+    const validMoves = [];
+    cpu.forEach((p, idx) => {
+      if(!Array.isArray(p) || p.length < 2) return;
+      const sides = getValidSides(p);
+      sides.forEach(side => {
+        validMoves.push({ index: idx, piece: p, side });
+      });
     });
-  });
 
-  if(validMoves.length > 0){
-    let chosenMove = validMoves[0];
+    if(validMoves.length > 0){
+      let chosenMove = validMoves[0];
 
-    if(aiDifficulty === "easy"){
-      chosenMove = validMoves[Math.floor(Math.random() * validMoves.length)];
-    } else if(aiDifficulty === "medium"){
-      chosenMove = validMoves.reduce((best, curr) => {
-        const sumBest = best.piece[0] + best.piece[1];
-        const sumCurr = curr.piece[0] + curr.piece[1];
-        return sumCurr > sumBest ? curr : best;
-      }, validMoves[0]);
+      if(aiDifficulty === "easy"){
+        chosenMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+      } else if(aiDifficulty === "medium"){
+        chosenMove = validMoves.reduce((best, curr) => {
+          const sumBest = best.piece[0] + best.piece[1];
+          const sumCurr = curr.piece[0] + curr.piece[1];
+          return sumCurr > sumBest ? curr : best;
+        }, validMoves[0]);
+      } else {
+        chosenMove = chooseHardMove(validMoves);
+      }
+
+      const piece = cpu.splice(chosenMove.index, 1)[0];
+      placePieceOnSide(piece, chosenMove.side);
+      consecutivePasses = 0;
+
+      if(cpu.length === 0){
+        finishRound("cpu", "bater");
+        return;
+      }
+
+      turn = "player";
+      render();
+      const buyMsg = boughtCount > 0 ? ` (comprou ${boughtCount} do monte)` : "";
+      setStatus(`👤 Sua vez! Computador jogou [${piece[0]}|${piece[1]}]${buyMsg}.`);
     } else {
-      chosenMove = chooseHardMove(validMoves);
+      consecutivePasses++;
+      if(deck.length === 0 && consecutivePasses >= 2){
+        resolveLockedGame();
+        return;
+      }
+      turn = "player";
+      render();
+      setStatus("🤖 Computador não teve jogada e passou a vez. Sua vez!");
     }
-
-    const piece = cpu.splice(chosenMove.index, 1)[0];
-    placePieceOnSide(piece, chosenMove.side);
-    consecutivePasses = 0;
-
-    if(cpu.length === 0){
-      finishRound("cpu", "bater");
-      return;
-    }
-
+  } catch (err) {
+    console.error("Erro na vez do computador:", err);
     turn = "player";
     render();
     setStatus("👤 Sua vez!");
-  } else {
-    consecutivePasses++;
-    if(consecutivePasses >= 2 && deck.length === 0){
-      resolveLockedGame();
-      return;
-    }
-    turn = "player";
-    render();
-    setStatus("🤖 Computador passou a vez. Sua vez!");
   }
 }
 
@@ -1408,6 +1469,7 @@ function drawPiece(){
 
   cancelSideChoice();
   const piece = deck.pop();
+  if(!Array.isArray(piece) || piece.length < 2) return;
   player.push(piece);
   render();
 
@@ -1442,11 +1504,15 @@ function passTurn(){
   turn = "cpu";
   render();
   setStatus("⏭ Você passou a vez. Computador jogando...");
-  setTimeout(cpuTurn, 800);
+  scheduleCpuTurn(roundId);
 }
 
 function sumHandPoints(hand){
-  return hand.reduce((total, piece) => total + piece[0] + piece[1], 0);
+  if(!Array.isArray(hand)) return 0;
+  return hand.reduce((total, piece) => {
+    if(!Array.isArray(piece) || piece.length < 2) return total;
+    return total + piece[0] + piece[1];
+  }, 0);
 }
 
 function resolveLockedGame(){
@@ -1467,6 +1533,11 @@ function resolveLockedGame(){
 ========================= */
 function finishRound(winner, reason, pPts = 0, cPts = 0){
   gameOver = true;
+  turn = "none";
+  if(cpuTimer){
+    clearTimeout(cpuTimer);
+    cpuTimer = null;
+  }
   cancelSideChoice();
 
   if(winner === "player"){
