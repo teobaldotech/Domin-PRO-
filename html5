@@ -275,6 +275,13 @@ header p{
   margin-top:4px;
 }
 
+.stat small{
+  display:block;
+  margin-top:3px;
+  color:var(--accent);
+  font-size:.75rem;
+}
+
 .status{
   text-align:center;
   background:#081625;
@@ -282,43 +289,125 @@ header p{
   border-radius:14px;
   padding:13px;
   margin-bottom:15px;
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
 /* =========================
-   ÁREA DO TABULEIRO
+   SELETOR DE PONTA
+========================= */
+.side-choice-bar{
+  display:none;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  background:#102a45;
+  border:1px solid var(--accent);
+  border-radius:14px;
+  padding:10px 16px;
+  margin-bottom:15px;
+  animation: fadeIn .2s ease;
+}
+
+.side-choice-bar.show{
+  display:flex;
+  flex-wrap:wrap;
+}
+
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(-5px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.btn-side{
+  background:var(--accent);
+  color:#04121f;
+  border:none;
+  padding:8px 16px;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.btn-side:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 12px rgba(0,229,255,.6);
+}
+
+.btn-cancel{
+  background:transparent;
+  border:1px solid #547291;
+  color:#cbd8e8;
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* =========================
+   ÁREA DO TABULEIRO (ZIGUE-ZAGUE)
 ========================= */
 .board{
   position:relative;
-  height:430px;
+  height:450px;
   overflow-y:auto;
   overflow-x:auto;
   border-radius:22px;
-  padding:25px;
+  padding:24px;
   background:radial-gradient(circle at center,#126149,#083c30 55%,#05251f);
   border:5px solid #70431e;
   box-shadow:inset 0 0 35px rgba(0,0,0,.55), 0 10px 30px rgba(0,0,0,.25);
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .board::before{
   content:"";
   position:absolute;
-  inset:20px;
+  inset:16px;
   border:1px solid rgba(255,255,255,.06);
   border-radius:18px;
   pointer-events:none;
 }
 
-.chain{
-  width:100%;
-  height:100%;
+.snake-board{
   display:flex;
-  justify-content:center;
+  flex-direction:column;
   align-items:center;
-  flex-wrap:wrap;
-  align-content:center;
-  gap:7px;
+  justify-content:center;
+  gap:8px;
+  margin:auto;
+  padding:10px;
+}
+
+.snake-row{
+  display:flex;
+  align-items:center;
+  gap:4px;
   position:relative;
-  min-width: 600px;
+}
+
+.snake-row.rtl{
+  flex-direction:row-reverse;
+}
+
+.snake-turn{
+  width:100%;
+  display:flex;
+  padding:0 18px;
+}
+
+.snake-turn.turn-right{
+  justify-content:flex-end;
+}
+
+.snake-turn.turn-left{
+  justify-content:flex-start;
 }
 
 /* =========================
@@ -338,37 +427,42 @@ header p{
   color:#111;
 }
 
-.chain .domino{
-  width:92px;
-  height:54px;
+.snake-board .domino{
+  width:88px;
+  height:48px;
   flex-direction:row;
   transition:.25s;
 }
 
-.chain .domino.vertical{
-  width:54px;
-  height:92px;
+.snake-board .domino.vertical{
+  width:48px;
+  height:88px;
   flex-direction:column;
 }
 
-.chain .domino:not(.vertical) .half{
+.snake-board .domino:not(.vertical) .half{
   width:50%;
   height:100%;
 }
 
-.chain .domino:not(.vertical) .half:first-child{
+.snake-board .domino:not(.vertical) .half:first-child{
   border-right:2px solid #777;
   border-bottom:0;
 }
 
-.chain .domino.vertical .half{
+.snake-board .domino.vertical .half{
   width:100%;
   height:50%;
 }
 
-.chain .domino.vertical .half:first-child{
+.snake-board .domino.vertical .half:first-child{
   border-right:0;
   border-bottom:2px solid #777;
+}
+
+.snake-board .domino.open-end{
+  border-color:var(--accent);
+  box-shadow: 0 0 16px rgba(0,229,255,.65);
 }
 
 .half{
@@ -416,6 +510,7 @@ header p{
   display:flex;
   justify-content:center;
   gap:7px;
+  margin-bottom:12px;
 }
 
 .back{
@@ -446,10 +541,16 @@ header p{
   transition:.2s;
 }
 
-.player-piece:hover{
+.player-piece:hover:not(.disabled){
   transform:translateY(-10px);
   border-color:var(--accent);
   box-shadow:0 0 20px rgba(0,229,255,.5);
+}
+
+.player-piece.selected{
+  transform:translateY(-14px);
+  border-color:var(--accent);
+  box-shadow:0 0 25px var(--accent);
 }
 
 .player-piece.disabled{
@@ -490,7 +591,7 @@ header p{
 }
 
 /* =========================
-   MODAL / CONFIGURAÇÕES
+   MODAL / TROFÉU / CONFIGURAÇÕES
 ========================= */
 .modal{
   position:fixed;
@@ -508,7 +609,7 @@ header p{
 }
 
 .modal-box{
-  width:min(450px,100%);
+  width:min(460px,100%);
   background:#0c1b2d;
   border:1px solid #31516f;
   border-radius:20px;
@@ -526,6 +627,43 @@ header p{
   line-height:1.6;
   margin-bottom:18px;
   text-align:left;
+}
+
+.trophy-badge{
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  margin:10px auto 16px;
+  padding:16px;
+  border-radius:16px;
+  background:radial-gradient(circle at top, rgba(255,215,64,.22), rgba(124,77,255,.12));
+  border:1px solid rgba(255,215,64,.55);
+  box-shadow:0 0 25px rgba(255,215,64,.22);
+}
+
+.trophy-badge.show{
+  display:flex;
+  animation: trophyPop .35s ease;
+}
+
+@keyframes trophyPop {
+  from { transform:scale(.82); opacity:0; }
+  to { transform:scale(1); opacity:1; }
+}
+
+.trophy-icon{
+  font-size:3.2rem;
+  line-height:1.1;
+  filter:drop-shadow(0 0 14px rgba(255,215,64,.65));
+}
+
+.trophy-label{
+  margin-top:6px;
+  font-weight:bold;
+  color:var(--gold);
+  font-size:1rem;
+  letter-spacing:.5px;
 }
 
 .form-group{
@@ -555,19 +693,22 @@ header p{
     grid-template-columns:repeat(2,1fr);
   }
   .board{
-    height:390px;
+    height:410px;
     padding:12px;
   }
-  .chain .domino{
-    width:76px;
-    height:45px;
+  .snake-board .domino{
+    width:68px;
+    height:38px;
   }
-  .chain .domino.vertical{
-    width:45px;
-    height:76px;
+  .snake-board .domino.vertical{
+    width:38px;
+    height:68px;
+  }
+  .snake-turn{
+    padding:0 12px;
   }
   .dots{
-    transform:scale(.75);
+    transform:scale(.72);
   }
 }
 </style>
@@ -608,11 +749,11 @@ header p{
 
 <header>
   <h1>🁣 DOMINÓ PRO</h1>
-  <p>Tabuleiro com corrente visual e Inteligência Artificial</p>
+  <p>Tabuleiro em zigue-zague e Inteligência Artificial</p>
 </header>
 
 <div class="topbar">
-  <button class="btn primary" onclick="newGame()">🔄 Novo Jogo</button>
+  <button class="btn primary" onclick="startNewSeries()">🔄 Nova Série</button>
   <button class="btn" onclick="openRulesModal()">📖 Regras</button>
   <button class="btn" onclick="openSettingsModal()">⚙️ Configurações</button>
 </div>
@@ -635,11 +776,20 @@ header p{
   <div class="stat">
     <span>Placar</span>
     <strong id="score">0 × 0</strong>
+    <small id="matchFormatLabel">Livre</small>
   </div>
 </div>
 
 <div class="status" id="status">
   Clique em "Iniciar Jogo".
+</div>
+
+<!-- BARRA DE ESCOLHA DE PONTA -->
+<div class="side-choice-bar" id="sideChoiceBar">
+  <span>Essa peça encaixa nos dois lados! Onde deseja jogar?</span>
+  <button class="btn-side" id="btnChooseLeft">⬅️ Ponta Esquerda</button>
+  <button class="btn-side" id="btnChooseRight">Ponta Direita ➡️</button>
+  <button class="btn-cancel" onclick="cancelSideChoice()">Cancelar</button>
 </div>
 
 <div>
@@ -648,8 +798,8 @@ header p{
 </div>
 
 <!-- TABULEIRO -->
-<div class="board">
-  <div class="chain" id="board">
+<div class="board" id="boardWrapper">
+  <div class="snake-board" id="board">
     <span style="color:#b9d4cb">A corrente de dominó aparecerá aqui</span>
   </div>
 </div>
@@ -669,21 +819,25 @@ header p{
   <h2>📜 Regras Rápidas</h2>
   <ul>
     <li>28 peças no dominó tradicional. Cada jogador começa com 7 peças.</li>
-    <li>Combine uma peça com uma das pontas abertas da mesa.</li>
-    <li>Se não tiver jogada, compre do monte. Se o monte acabar, passe a vez.</li>
-    <li>Quem ficar sem peças na mão primeiro vence a rodada!</li>
+    <li>Combine uma peça com uma das pontas destacadas na mesa (se servir nas duas, escolha o lado).</li>
+    <li>No modo <strong>Melhor de 3</strong> (vence com 2) ou <strong>Melhor de 5</strong> (vence com 3), o primeiro a atingir a meta leva o troféu!</li>
+    <li>Vence a rodada quem bater primeiro ou, se o jogo trancar, quem tiver menos pontos na mão!</li>
   </ul>
 </div>
 
 </div>
 </div>
 
-<!-- MODAL DE FIM DE RODADA -->
+<!-- MODAL DE FIM DE RODADA / TROFÉU -->
 <div class="modal" id="modal">
   <div class="modal-box">
-    <h2>🏆 Fim da Rodada</h2>
+    <h2 id="modalTitle">🏆 Fim da Rodada</h2>
+    <div class="trophy-badge" id="trophyBadge">
+      <div class="trophy-icon" id="trophyIcon">🏆</div>
+      <div class="trophy-label" id="trophyLabel">CAMPEÃO DA SÉRIE</div>
+    </div>
     <p id="resultText"></p>
-    <button class="btn primary" style="width:100%;" onclick="closeModal();newGame()">🔄 Jogar Novamente</button>
+    <button class="btn primary" id="modalActionBtn" style="width:100%;" onclick="handleModalAction()">🔄 Próxima Rodada</button>
   </div>
 </div>
 
@@ -692,11 +846,11 @@ header p{
   <div class="modal-box">
     <h2>📖 Como Jogar</h2>
     <p>
-      1. O jogo começa distribuindo 7 peças para você e 7 para o computador.<br>
-      2. Na sua vez, selecione uma peça que coincida com o número de pontos de uma das pontas correntes da mesa.<br>
-      3. Caso não possua peças válidas, utilize o botão <strong>Comprar Peça</strong>.<br>
-      4. Se o monte estiver vazio e você não puder jogar, utilize o botão <strong>Passar</strong>.<br>
-      5. O primeiro a esvaziar a mão vence a rodada!
+1. O jogo começa distribuindo 7 peças para você e 7 para o computador.<br>
+2. Na sua vez, selecione uma peça que coincida com uma das pontas abertas (destacadas em azul na mesa). Caso encaixe nos dois lados, escolha qual ponta usar.<br>
+3. Caso não possua peças válidas, utilize o botão <strong>Comprar Peça</strong>.<br>
+4. Se o monte estiver vazio e ninguém puder jogar (jogo trancado), vence a rodada quem somar <strong>menos pontos</strong> nas peças restantes.<br>
+5. Em séries <strong>Melhor de 3</strong> ou <strong>Melhor de 5</strong>, quem atingir a maioria de vitórias primeiro conquista o troféu de campeão!
     </p>
     <button class="btn primary" style="width:100%;" onclick="closeRulesModal()">Entendi</button>
   </div>
@@ -706,6 +860,14 @@ header p{
 <div class="modal" id="settingsModal">
   <div class="modal-box">
     <h2>⚙️ Configurações</h2>
+    <div class="form-group">
+      <label for="matchModeSelect">Formato da Partida:</label>
+      <select id="matchModeSelect" onchange="changeMatchMode(this.value)">
+        <option value="free" selected>Livre (Sem limite de rodadas)</option>
+        <option value="bo3">Melhor de 3 (Primeiro a 2 vitórias)</option>
+        <option value="bo5">Melhor de 5 (Primeiro a 3 vitórias)</option>
+      </select>
+    </div>
     <div class="form-group">
       <label for="aiDifficulty">Dificuldade da IA:</label>
       <select id="aiDifficulty" onchange="changeDifficulty(this.value)">
@@ -727,23 +889,48 @@ let turn = "player";
 let playerScore = 0;
 let cpuScore = 0;
 let gameOver = false;
+let seriesOver = false;
 let aiDifficulty = "medium";
+let matchMode = "free"; // "free" | "bo3" | "bo5"
+let consecutivePasses = 0;
+let pendingPieceIndex = null;
 
 const $ = id => document.getElementById(id);
 
+function getTargetWins(){
+  if(matchMode === "bo3") return 2;
+  if(matchMode === "bo5") return 3;
+  return null;
+}
+
+function getMatchModeLabel(){
+  if(matchMode === "bo3") return "Melhor de 3 (Meta: 2)";
+  if(matchMode === "bo5") return "Melhor de 5 (Meta: 3)";
+  return "Modo Livre";
+}
+
 function closeSplash(){
   $("splashScreen").classList.add("hidden");
-  startGame();
+  startNewSeries();
 }
 
 function openRulesModal(){ $("rulesModal").classList.add("show"); }
 function closeRulesModal(){ $("rulesModal").classList.remove("show"); }
 
-function openSettingsModal(){ $("settingsModal").classList.add("show"); }
+function openSettingsModal(){
+  $("matchModeSelect").value = matchMode;
+  $("aiDifficulty").value = aiDifficulty;
+  $("settingsModal").classList.add("show");
+}
 function closeSettingsModal(){ $("settingsModal").classList.remove("show"); }
 
 function changeDifficulty(val){
   aiDifficulty = val;
+}
+
+function changeMatchMode(val){
+  matchMode = val;
+  startNewSeries();
 }
 
 /* =========================
@@ -766,13 +953,10 @@ function shuffle(array){
   }
 }
 
-function startGame(){
+function startNewSeries(){
   playerScore = 0;
   cpuScore = 0;
-  newRound();
-}
-
-function newGame(){
+  seriesOver = false;
   newRound();
 }
 
@@ -784,8 +968,10 @@ function newRound(){
   board = [];
   turn = "player";
   gameOver = false;
+  consecutivePasses = 0;
+  cancelSideChoice();
   render();
-  setStatus("👤 Sua vez! Escolha uma peça ou compre se necessário.");
+  setStatus(`👤 Sua vez! (${getMatchModeLabel()})`);
 }
 
 /* =========================
@@ -796,10 +982,11 @@ function render(){
   renderCPU();
   renderBoard();
 
-  $("playerCount").textContent = player.length + " peças";
-  $("cpuCount").textContent = cpu.length + " peças";
-  $("deckCount").textContent = deck.length + " peças";
+  $("playerCount").textContent = player.length + (player.length === 1 ? " peça" : " peças");
+  $("cpuCount").textContent = cpu.length + (cpu.length === 1 ? " peça" : " peças");
+  $("deckCount").textContent = deck.length + (deck.length === 1 ? " peça" : " peças");
   $("score").textContent = playerScore + " × " + cpuScore;
+  $("matchFormatLabel").textContent = getMatchModeLabel();
 }
 
 function renderPlayer(){
@@ -808,10 +995,13 @@ function renderPlayer(){
   player.forEach((piece, index) => {
     const el = createDomino(piece[0], piece[1]);
     el.classList.add("player-piece");
+    if(pendingPieceIndex === index){
+      el.classList.add("selected");
+    }
     if(turn !== "player" || !canPlay(piece)){
       el.classList.add("disabled");
     } else {
-      el.onclick = () => playPlayer(index);
+      el.onclick = () => handlePlayerClick(index);
     }
     hand.appendChild(el);
   });
@@ -827,21 +1017,81 @@ function renderCPU(){
   });
 }
 
+/* =========================
+   TABULEIRO EM ZIGUE-ZAGUE (SERPENTINA)
+========================= */
+function getPiecesPerRow(){
+  const wrapperWidth = $("boardWrapper") ? $("boardWrapper").clientWidth : window.innerWidth;
+  if(wrapperWidth < 520) return 4;
+  if(wrapperWidth < 820) return 6;
+  return 8;
+}
+
 function renderBoard(){
   const area = $("board");
   area.innerHTML = "";
+
   if(board.length === 0){
     area.innerHTML = '<span style="color:#b9d4cb">A corrente de dominó aparecerá aqui</span>';
     return;
   }
-  board.forEach((piece, index) => {
-    const el = createDomino(piece[0], piece[1]);
-    if(index % 5 === 4){
-      el.classList.add("vertical");
+
+  const perRow = getPiecesPerRow();
+  let cursor = 0;
+  let rowIndex = 0;
+
+  while(cursor < board.length){
+    const isRTL = (rowIndex % 2 === 1);
+    const rowEl = document.createElement("div");
+    rowEl.className = "snake-row" + (isRTL ? " rtl" : "");
+
+    const rowEnd = Math.min(cursor + perRow, board.length);
+
+    for(let i = cursor; i < rowEnd; i++){
+      const piece = board[i];
+      const displayA = isRTL ? piece[1] : piece[0];
+      const displayB = isRTL ? piece[0] : piece[1];
+
+      const el = createDomino(displayA, displayB);
+
+      if(piece[0] === piece[1]){
+        el.classList.add("vertical");
+      }
+
+      if(i === 0 || i === board.length - 1){
+        el.classList.add("open-end");
+      }
+
+      rowEl.appendChild(el);
     }
-    area.appendChild(el);
-  });
+
+    area.appendChild(rowEl);
+    cursor = rowEnd;
+
+    if(cursor < board.length){
+      const turnPiece = board[cursor];
+      const turnWrapper = document.createElement("div");
+      turnWrapper.className = "snake-turn " + (!isRTL ? "turn-right" : "turn-left");
+
+      const turnEl = createDomino(turnPiece[0], turnPiece[1]);
+      turnEl.classList.add("vertical");
+
+      if(cursor === board.length - 1){
+        turnEl.classList.add("open-end");
+      }
+
+      turnWrapper.appendChild(turnEl);
+      area.appendChild(turnWrapper);
+      cursor++;
+    }
+
+    rowIndex++;
+  }
 }
+
+window.addEventListener("resize", () => {
+  if(board.length > 0) renderBoard();
+});
 
 function createDomino(a, b){
   const el = document.createElement("div");
@@ -878,51 +1128,101 @@ function createHalf(value){
 }
 
 /* =========================
-   LÓGICA DE JOGADAS
+   LÓGICA DE JOGADAS E PONTAS
 ========================= */
-function canPlay(piece){
-  if(board.length === 0) return true;
-  const left = board[0][0];
-  const right = board[board.length - 1][1];
-  return (piece[0] === left || piece[1] === left || piece[0] === right || piece[1] === right);
+function getValidSides(piece, currentBoard = board){
+  if(currentBoard.length === 0) return ["right"];
+  const left = currentBoard[0][0];
+  const right = currentBoard[currentBoard.length - 1][1];
+  const canLeft = (piece[0] === left || piece[1] === left);
+  const canRight = (piece[0] === right || piece[1] === right);
+
+  if(canLeft && canRight && left === right && piece[0] === piece[1]){
+    return ["right"];
+  }
+
+  const sides = [];
+  if(canLeft) sides.push("left");
+  if(canRight) sides.push("right");
+  return sides;
 }
 
-function placePiece(piece){
-  if(board.length === 0){
-    board.push(piece);
-    return;
-  }
-  const left = board[0][0];
-  const right = board[board.length - 1][1];
+function canPlay(piece, currentBoard = board){
+  return getValidSides(piece, currentBoard).length > 0;
+}
 
-  if(piece[1] === left){
-    board.unshift(piece);
-  }else if(piece[0] === left){
-    board.unshift([piece[1], piece[0]]);
-  }else if(piece[0] === right){
-    board.push(piece);
-  }else if(piece[1] === right){
-    board.push([piece[1], piece[0]]);
+function simulateBoardPlacement(piece, side, currentBoard = board){
+  const nextBoard = currentBoard.map(p => [...p]);
+  if(nextBoard.length === 0){
+    nextBoard.push([...piece]);
+    return nextBoard;
   }
+  const left = nextBoard[0][0];
+  const right = nextBoard[nextBoard.length - 1][1];
+
+  if(side === "left"){
+    if(piece[1] === left){
+      nextBoard.unshift([...piece]);
+    } else {
+      nextBoard.unshift([piece[1], piece[0]]);
+    }
+  } else {
+    if(piece[0] === right){
+      nextBoard.push([...piece]);
+    } else {
+      nextBoard.push([piece[1], piece[0]]);
+    }
+  }
+  return nextBoard;
+}
+
+function placePieceOnSide(piece, side){
+  board = simulateBoardPlacement(piece, side, board);
 }
 
 /* =========================
    JOGADOR
 ========================= */
-function playPlayer(index){
+function handlePlayerClick(index){
   if(turn !== "player" || gameOver) return;
   const piece = player[index];
+  const sides = getValidSides(piece);
 
-  if(!canPlay(piece)){
-    setStatus("❌ Essa peça não combina com a mesa.");
+  if(sides.length === 0){
+    setStatus("❌ Essa peça não combina com nenhuma ponta da mesa.");
     return;
   }
 
-  player.splice(index, 1);
-  placePiece(piece);
+  if(sides.length === 2){
+    pendingPieceIndex = index;
+    const leftVal = board[0][0];
+    const rightVal = board[board.length - 1][1];
+    $("btnChooseLeft").textContent = `⬅️ Início (${leftVal})`;
+    $("btnChooseRight").textContent = `Final (${rightVal}) ➡️`;
+    $("btnChooseLeft").onclick = () => executePlayerMove(index, "left");
+    $("btnChooseRight").onclick = () => executePlayerMove(index, "right");
+    $("sideChoiceBar").classList.add("show");
+    renderPlayer();
+    return;
+  }
+
+  executePlayerMove(index, sides[0]);
+}
+
+function cancelSideChoice(){
+  pendingPieceIndex = null;
+  $("sideChoiceBar").classList.remove("show");
+  renderPlayer();
+}
+
+function executePlayerMove(index, side){
+  cancelSideChoice();
+  const piece = player.splice(index, 1)[0];
+  placePieceOnSide(piece, side);
+  consecutivePasses = 0;
 
   if(player.length === 0){
-    finishRound("player");
+    finishRound("player", "bater");
     return;
   }
 
@@ -939,7 +1239,11 @@ function showHint(){
   if(turn !== "player" || gameOver) return;
   const validIndex = player.findIndex(canPlay);
   if(validIndex === -1){
-    setStatus("💡 Você não possui jogadas válidas. Compre uma peça ou passe.");
+    if(deck.length > 0){
+      setStatus("💡 Sem jogadas! Clique em 'Comprar Peça'.");
+    } else {
+      setStatus("💡 Sem jogadas e monte vazio! Clique em 'Passar'.");
+    }
     return;
   }
   const piecesEls = document.querySelectorAll(".player-piece");
@@ -955,51 +1259,121 @@ function showHint(){
 /* =========================
    INTELIGÊNCIA ARTIFICIAL (CPU)
 ========================= */
+function getRemainingFrequency(hand, excludeIndex){
+  const freq = Array(7).fill(0);
+  hand.forEach((p, idx) => {
+    if(idx === excludeIndex) return;
+    freq[p[0]]++;
+    if(p[1] !== p[0]) freq[p[1]]++;
+    else freq[p[0]]++;
+  });
+  return freq;
+}
+
+function scoreHardMove(move, cpuHand, currentBoard, remainingDeckCount, playerHandCount){
+  const { index, piece, side } = move;
+  const nextBoard = simulateBoardPlacement(piece, side, currentBoard);
+  const remainingHand = cpuHand.filter((_, idx) => idx !== index);
+  const freq = getRemainingFrequency(cpuHand, index);
+
+  let score = 0;
+
+  if(remainingHand.length === 0){
+    return 10000;
+  }
+
+  const newLeft = nextBoard[0][0];
+  const newRight = nextBoard[nextBoard.length - 1][1];
+
+  score += freq[newLeft] * 14;
+  score += freq[newRight] * 14;
+
+  const cpuStillHasNewLeft = remainingHand.some(p => p[0] === newLeft || p[1] === newLeft);
+  const cpuStillHasNewRight = remainingHand.some(p => p[0] === newRight || p[1] === newRight);
+  if(!cpuStillHasNewLeft) score -= 12;
+  if(!cpuStillHasNewRight) score -= 12;
+
+  const piecePoints = piece[0] + piece[1];
+  score += piecePoints * 2.2;
+
+  if(piece[0] === piece[1] && remainingHand.length > 2){
+    score += 8;
+  }
+
+  const cpuPointsAfter = sumHandPoints(remainingHand);
+  const estimatedPlayerPoints = playerHandCount * 5.5;
+  const hasPointsAdvantage = cpuPointsAfter + 3 < estimatedPlayerPoints;
+  const followUpPlays = remainingHand.filter(p => canPlay(p, nextBoard)).length;
+  const endgamePressure = remainingDeckCount === 0 ? 1.6 : (remainingDeckCount <= 3 ? 0.8 : 0.25);
+
+  if(hasPointsAdvantage){
+    if(followUpPlays === 0 && remainingDeckCount === 0){
+      score += 45 * endgamePressure;
+    } else if(newLeft === newRight){
+      score += 18 * endgamePressure;
+    }
+  } else {
+    if(followUpPlays === 0 && remainingDeckCount === 0){
+      score -= 55 * endgamePressure;
+    } else if(followUpPlays === 0){
+      score -= 14 * endgamePressure;
+    }
+    score += piecePoints * 1.5;
+  }
+
+  return score;
+}
+
+function chooseHardMove(validMoves){
+  let bestMove = validMoves[0];
+  let bestScore = -Infinity;
+
+  for(const move of validMoves){
+    const s = scoreHardMove(move, cpu, board, deck.length, player.length);
+    if(s > bestScore){
+      bestScore = s;
+      bestMove = move;
+    }
+  }
+  return bestMove;
+}
+
 function cpuTurn(){
   if(gameOver) return;
 
-  // Fase 1: Comprar do monte se não tiver peça válida
   while(!cpu.some(canPlay) && deck.length > 0){
     cpu.push(deck.pop());
   }
 
-  // Fase 2: Seleção de peça conforme dificuldade
-  let index = -1;
-  const validIndices = [];
+  const validMoves = [];
   cpu.forEach((p, idx) => {
-    if(canPlay(p)) validIndices.push(idx);
+    const sides = getValidSides(p);
+    sides.forEach(side => {
+      validMoves.push({ index: idx, piece: p, side });
+    });
   });
 
-  if(validIndices.length > 0){
-    if(aiDifficulty === "easy"){
-      // Escolhe aleatoriamente uma válida
-      index = validIndices[Math.floor(Math.random() * validIndices.length)];
-    } else if(aiDifficulty === "medium"){
-      // Prefere peças com maior somatório de pontos
-      index = validIndices.reduce((bestIdx, currIdx) => {
-        const sumBest = cpu[bestIdx][0] + cpu[bestIdx][1];
-        const sumCurr = cpu[currIdx][0] + cpu[currIdx][1];
-        return sumCurr > sumBest ? currIdx : bestIdx;
-      }, validIndices[0]);
-    } else {
-      // Difícil: Prioriza duplos ou peças que bloqueiam
-      index = validIndices.reduce((bestIdx, currIdx) => {
-        const pCurr = cpu[currIdx];
-        const pBest = cpu[bestIdx];
-        const isCurrDouble = pCurr[0] === pCurr[1];
-        const isBestDouble = pBest[0] === pBest[1];
-        if(isCurrDouble && !isBestDouble) return currIdx;
-        return (pCurr[0] + pCurr[1] > pBest[0] + pBest[1]) ? currIdx : bestIdx;
-      }, validIndices[0]);
-    }
-  }
+  if(validMoves.length > 0){
+    let chosenMove = validMoves[0];
 
-  if(index !== -1){
-    const piece = cpu.splice(index, 1)[0];
-    placePiece(piece);
+    if(aiDifficulty === "easy"){
+      chosenMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+    } else if(aiDifficulty === "medium"){
+      chosenMove = validMoves.reduce((best, curr) => {
+        const sumBest = best.piece[0] + best.piece[1];
+        const sumCurr = curr.piece[0] + curr.piece[1];
+        return sumCurr > sumBest ? curr : best;
+      }, validMoves[0]);
+    } else {
+      chosenMove = chooseHardMove(validMoves);
+    }
+
+    const piece = cpu.splice(chosenMove.index, 1)[0];
+    placePieceOnSide(piece, chosenMove.side);
+    consecutivePasses = 0;
 
     if(cpu.length === 0){
-      finishRound("cpu");
+      finishRound("cpu", "bater");
       return;
     }
 
@@ -1007,7 +1381,11 @@ function cpuTurn(){
     render();
     setStatus("👤 Sua vez!");
   } else {
-    // Passa a vez caso continue sem jogada e monte zerado
+    consecutivePasses++;
+    if(consecutivePasses >= 2 && deck.length === 0){
+      resolveLockedGame();
+      return;
+    }
     turn = "player";
     render();
     setStatus("🤖 Computador passou a vez. Sua vez!");
@@ -1015,22 +1393,30 @@ function cpuTurn(){
 }
 
 /* =========================
-   COMPRAR E PASSAR
+   COMPRAR, PASSAR E JOGO TRANCADO
 ========================= */
 function drawPiece(){
   if(turn !== "player" || gameOver) return;
-  if(deck.length === 0){
-    setStatus("📦 O monte está vazio.");
+  if(player.some(canPlay)){
+    setStatus("⚠️ Você já possui uma peça válida na mão!");
     return;
   }
+  if(deck.length === 0){
+    setStatus("📦 O monte está vazio. Se não tiver jogada, clique em 'Passar'.");
+    return;
+  }
+
+  cancelSideChoice();
   const piece = deck.pop();
   player.push(piece);
   render();
 
   if(canPlay(piece)){
-    setStatus("🃏 Você comprou uma peça jogável!");
+    setStatus(`🃏 Você comprou [${piece[0]}|${piece[1]}] e já pode jogar!`);
+  } else if(deck.length > 0){
+    setStatus(`🃏 Você comprou [${piece[0]}|${piece[1]}]. Compre novamente.`);
   } else {
-    setStatus("🃏 Peça comprada.");
+    setStatus(`🃏 Você comprou [${piece[0]}|${piece[1]}] e o monte acabou!`);
   }
 }
 
@@ -1045,28 +1431,121 @@ function passTurn(){
     return;
   }
 
+  cancelSideChoice();
+  consecutivePasses++;
+
+  if(consecutivePasses >= 2){
+    resolveLockedGame();
+    return;
+  }
+
   turn = "cpu";
   render();
   setStatus("⏭ Você passou a vez. Computador jogando...");
   setTimeout(cpuTurn, 800);
 }
 
+function sumHandPoints(hand){
+  return hand.reduce((total, piece) => total + piece[0] + piece[1], 0);
+}
+
+function resolveLockedGame(){
+  const playerPoints = sumHandPoints(player);
+  const cpuPoints = sumHandPoints(cpu);
+
+  if(playerPoints < cpuPoints){
+    finishRound("player", "trancado", playerPoints, cpuPoints);
+  } else if(cpuPoints < playerPoints){
+    finishRound("cpu", "trancado", playerPoints, cpuPoints);
+  } else {
+    finishRound("draw", "trancado", playerPoints, cpuPoints);
+  }
+}
+
 /* =========================
-   FINAL DE RODADA
+   FINAL DE RODADA E TROFÉU
 ========================= */
-function finishRound(winner){
+function finishRound(winner, reason, pPts = 0, cPts = 0){
   gameOver = true;
+  cancelSideChoice();
+
   if(winner === "player"){
     playerScore++;
-    $("resultText").textContent = "🎉 Parabéns! Você venceu a rodada!";
-  } else {
+  } else if(winner === "cpu"){
     cpuScore++;
-    $("resultText").textContent = "🤖 O computador venceu a rodada.";
   }
+
+  const targetWins = getTargetWins();
+  let champion = null;
+  if(targetWins !== null){
+    if(playerScore >= targetWins) champion = "player";
+    else if(cpuScore >= targetWins) champion = "cpu";
+  }
+
+  const trophyBadge = $("trophyBadge");
+  trophyBadge.classList.remove("show");
+
+  if(champion !== null){
+    seriesOver = true;
+    trophyBadge.classList.add("show");
+    if(champion === "player"){
+      $("modalTitle").textContent = "👑 Campeão do Dominó PRO!";
+      $("trophyIcon").textContent = "🏆";
+      $("trophyLabel").textContent = `TROFÉU DE CAMPEÃO (${playerScore} × ${cpuScore})`;
+    } else {
+      $("modalTitle").textContent = "🤖 Vitória do Computador na Série";
+      $("trophyIcon").textContent = "🏆";
+      $("trophyLabel").textContent = `TROFÉU DO COMPUTADOR (${cpuScore} × ${playerScore})`;
+    }
+    $("modalActionBtn").textContent = "🔄 Nova Série";
+  } else {
+    seriesOver = false;
+    $("modalTitle").textContent = reason === "trancado" ? "🔒 Jogo Trancado!" : "🏆 Fim da Rodada";
+    $("modalActionBtn").textContent = "🔄 Próxima Rodada";
+  }
+
+  let bodyHtml = "";
+  if(reason === "trancado"){
+    bodyHtml += `Ninguém tem mais jogadas possíveis!<br>
+      <strong>Seus pontos na mão:</strong> ${pPts}<br>
+      <strong>Pontos do Computador:</strong> ${cPts}<br><br>`;
+    if(winner === "player"){
+      bodyHtml += "🎉 Você venceu a rodada por ter menos pontos!";
+    } else if(winner === "cpu"){
+      bodyHtml += "🤖 O computador venceu a rodada por ter menos pontos.";
+    } else {
+      bodyHtml += "🤝 Empate técnico na rodada!";
+    }
+  } else {
+    if(winner === "player"){
+      bodyHtml += "🎉 Parabéns! Você bateu e venceu a rodada!";
+    } else {
+      bodyHtml += "🤖 O computador bateu e venceu a rodada.";
+    }
+  }
+
+  bodyHtml += `<br><br><strong>Placar da série:</strong> ${playerScore} × ${cpuScore}`;
+  if(champion === "player"){
+    bodyHtml += `<br>🏅 Você conquistou o troféu da série!`;
+  } else if(champion === "cpu"){
+    bodyHtml += `<br>🤖 O computador conquistou o troféu desta série.`;
+  }
+
+  $("resultText").innerHTML = bodyHtml;
+
   render();
   setTimeout(() => {
     $("modal").classList.add("show");
   }, 300);
+}
+
+function handleModalAction(){
+  closeModal();
+  if(seriesOver){
+    startNewSeries();
+  } else {
+    newRound();
+  }
 }
 
 function setStatus(text){
